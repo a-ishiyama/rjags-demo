@@ -67,8 +67,11 @@ real_new
 ```{r}
 #Q3
 week <- c(1:52)
-plot(week, real_new, col = 'blue')
+plot(week, real_new, col = 'blue', xlab = "weeks", ylab = "number of death")
 lines(week, new, col = 'red')
+legend(x = 'topright', legend=c("observed", "predicted"),
+       col=c("blue", "red"), inset = 0.05, lty = 3:1 ,cex=1.2, border = "black",
+       box.lty=0, bg = rgb(1, 0, 0, alpha = 0.15))
 ```
 
 ```{r}
@@ -76,6 +79,6 @@ lines(week, new, col = 'red')
 excess_death <- real_new - new
 cum_excess <- cumsum(excess_death)
 #plot(week, cum_excess, type = 'p')
-plot(week, cum_excess, type = "b", pch = 19, col = "red", xlab = "x", ylab = "y")
+plot(week, cum_excess, type = "b", pch = 18, col = "red", xlab = "weeks", ylab = "excess death")
 ```
 
