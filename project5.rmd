@@ -49,25 +49,25 @@ test <- predicted_death_week(population_m, population_f, death_m, death_f, modif
 
 ```{r}
 #Q2
-new_m <- info$mpop20
-new_f <- info$fpop20
+population_m_20 <- info$mpop20
+population_f_20 <- info$fpop20
 
-real_new_all <- death$deaths[157:305]
-new_all <- predicted_death_week(new_m, new_f, death_m, death_f, modifier[157:305])
-diff_all <- sum(new_all - real_new_all)
-excess_death_all <- real_new_all - new_all
+death_from_2020 <- death$deaths[157:305]
+p_death_from_2020 <- predicted_death_week(population_m_20, population_f_20, death_m, death_f, modifier[157:305])
+excess_death_from_2020 <- p_death_from_2020 - death_from_2020
+excess_from_2020_sum <- sum(excess_death_from_2020)
 
-real_new <- death$deaths[157:208]
-new <- predicted_death_week(new_m, new_f, death_m, death_f, modifier[157:208])
-diff <- sum(new - real_new)
-diff
+death_2020 <- death$deaths[157:208]
+p_death_2020 <- predicted_death_week(population_m_20, population_f_20, death_m, death_f, modifier[157:208])
+excess_death_2020 <- p_death_2020 - death_2020
+excess_2020_sum <- sum(excess_death_2020)
 ```
 
 ```{r}
 #Q3
 week <- c(1:52)
-plot(week, real_new, col = 'blue', xlab = "weeks", ylab = "number of death")
-lines(week, new, col = 'red')
+plot(week, death_2020, col = 'blue', xlab = "weeks", ylab = "number of death")
+lines(week, p_death_2020, col = 'red')
 legend(x = 'topright', legend=c("observed", "predicted"),
        col=c("blue", "red"), inset = 0.05, lty = 3:1 ,cex=1.2, border = "black",
        box.lty=0, bg = rgb(1, 0, 0, alpha = 0.15))
@@ -75,9 +75,7 @@ legend(x = 'topright', legend=c("observed", "predicted"),
 
 ```{r}
 #Q4
-excess_death <- real_new - new
-cum_excess <- cumsum(excess_death)
-#plot(week, cum_excess, type = 'p')
+cum_excess <- cumsum(excess_death_2020)
 plot(week, cum_excess, type = "b", pch = 18, col = "red", xlab = "weeks", ylab = "excess death")
 ```
 
@@ -89,20 +87,27 @@ set.seed(1)
 jags_params <- c("mu", "rho", "k")
 delete <- c(51, 52, 53, 105, 106)
 for (i in delete){
-  excess_death_all[i] <- NA
+  excess_death_from_2020[i] <- NA
 }
 
-jags_data <- list(x = excess_death_all, N = length(excess_death_all))
+jags_data <- list(x = excess_death_from_2020, N = length(excess_death_from_2020))
 model_jags <- jags.model("model.jags", data = jags_data) # n.chains=2)
 sample <- jags.samples(model_jags, jags_params, n.iter=10000)
-#str(sample)
-#dic.samples(model_jags,n.iter=10000)
+sample_coda <- coda.samples(model_jags, jags_params, n.iter=10000)
+
+print(sample)
 ```
 
 ```{r}
-sample_coda <- coda.samples(model_jags, jags_params, n.iter=10000)
-summary(sample_coda)
-str(sample_coda)
-#plot(sample_coda$rho)
+#Q6
+sample_coda_list <- as.mcmc.list(sample_coda)
+rho_list <- sample_coda_list[, 151]
+plot(rho_list)
+```
+
+```{r}
+#Q7
+
+
 ```
 
