@@ -55,7 +55,7 @@ new_f <- info$fpop20
 
 real_new_all <- death$deaths[157:305]
 new_all <- predicted_death_week(new_m, new_f, death_m, death_f, modifier[157:305])
-diff_all <- sum(new - real_new)
+diff_all <- sum(new_all - real_new_all)
 
 real_new <- death$deaths[157:208]
 new <- predicted_death_week(new_m, new_f, death_m, death_f, modifier[157:208])
@@ -73,7 +73,9 @@ lines(week, new, col = 'red')
 
 ```{r}
 #Q4
-
-
+excess_death <- real_new - new
+cum_excess <- cumsum(excess_death)
+#plot(week, cum_excess, type = 'p')
+plot(week, cum_excess, type = "b", pch = 19, col = "red", xlab = "x", ylab = "y")
 ```
 
