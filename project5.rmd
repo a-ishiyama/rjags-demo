@@ -54,12 +54,12 @@ population_f_20 <- info$fpop20
 
 death_from_2020 <- death$deaths[157:length(death$deaths)]
 p_death_from_2020 <- predicted_death_week(population_m_20, population_f_20, death_m, death_f, modifier[157:length(death$deaths)])
-excess_death_from_2020 <- p_death_from_2020 - death_from_2020
+excess_death_from_2020 <- death_from_2020 - p_death_from_2020
 excess_from_2020_sum <- sum(excess_death_from_2020)
 
 death_2020 <- death$deaths[157:208]
 p_death_2020 <- predicted_death_week(population_m_20, population_f_20, death_m, death_f, modifier[157:208])
-excess_death_2020 <- p_death_2020 - death_2020
+excess_death_2020 <- death_2020 - p_death_2020
 excess_2020_sum <- sum(excess_death_2020)
 ```
 
