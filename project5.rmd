@@ -52,8 +52,8 @@ test <- predicted_death_week(population_m, population_f, death_m, death_f, modif
 population_m_20 <- info$mpop20
 population_f_20 <- info$fpop20
 
-death_from_2020 <- death$deaths[157:305]
-p_death_from_2020 <- predicted_death_week(population_m_20, population_f_20, death_m, death_f, modifier[157:305])
+death_from_2020 <- death$deaths[157:length(death$deaths)]
+p_death_from_2020 <- predicted_death_week(population_m_20, population_f_20, death_m, death_f, modifier[157:length(death$deaths)])
 excess_death_from_2020 <- p_death_from_2020 - death_from_2020
 excess_from_2020_sum <- sum(excess_death_from_2020)
 
@@ -82,8 +82,6 @@ plot(week, cum_excess, type = "b", pch = 18, col = "red", xlab = "weeks", ylab =
 ```{r}
 #Q5
 library('rjags')
-set.seed(1)
-
 jags_params <- c("mu", "rho", "k")
 delete <- c(51, 52, 53, 105, 106)
 for (i in delete){
@@ -91,23 +89,43 @@ for (i in delete){
 }
 
 jags_data <- list(x = excess_death_from_2020, N = length(excess_death_from_2020))
-model_jags <- jags.model("model.jags", data = jags_data) # n.chains=2)
-sample <- jags.samples(model_jags, jags_params, n.iter=10000)
-sample_coda <- coda.samples(model_jags, jags_params, n.iter=10000)
+model_jags <- jags.model("model.jags", data = jags_data)
+sample <- jags.samples(model_jags, jags_params, n.iter = 10000, jags.seed = 1)
 
+sample_coda <- coda.samples(model_jags, jags_params, n.iter = 10000, jags.seed = 1)
 print(sample)
 ```
 
 ```{r}
 #Q6
 sample_coda_list <- as.mcmc.list(sample_coda)
-rho_list <- sample_coda_list[, 151]
+rho_list <- sample_coda_list[, length(excess_death_from_2020)+2]
 plot(rho_list)
 ```
 
 ```{r}
 #Q7
+mu <- sample$mu
+
+mu_coda <- rep(0,length(excess_death_from_2020)+2)
+for (i in 1:(length(excess_death_from_2020)+2)){
+  mu_coda[i]<-sum(unlist(sample_coda_list[,i]))/10000
+}
+mu_coda <- mu_coda[2:(length(excess_death_from_2020)+1)]
+mu_coda
+```
+
+```{r}
+#Q8
+index <- rep(1:10000)
+
+```
 
 
+```{r}
+#Q9
+residual_d <- excess_death_from_2020 - mu_coda
+time <- (1:length(excess_death_from_2020))
+plot(time, residual_d)
 ```
 
