@@ -1,0 +1,79 @@
+```{r}
+#read data
+info <- read.table('lt1720uk.dat', header=TRUE)
+death <- read.table('death1722uk.dat', header=TRUE)
+
+population_m <- info$mpop17
+population_f <- info$fpop17
+death_m <- info$mm
+death_f <- info$mf
+modifier <- death$d
+```
+
+```{r}
+#Q1
+predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
+  
+  q_m <- 1 - exp(-dr_m/52)
+  q_f <- 1 - exp(-dr_f/52)
+  pop_m <- population_m
+  pop_f <- population_f
+  death_count_week <- rep(0,length(mod)) 
+  
+  for (i in 1:length(mod)){
+    d <- mod[i] # modifier in week i
+    death_m <- d*0.9885*q_m*pop_m
+    death_f <- d*0.9885*q_f*pop_f
+    death_count_week[i] <- sum(death_m + death_f)
+    
+    pop_m[1] <- pop_m[1] - death_m[1]
+    pop_f[1] <- pop_f[1] - death_f[1]
+    
+    for (i in 2:length(pop_m)){
+      pop_m[i] <- (pop_m[i] - death_m[i])*(51/52) + pop_m[i-1]/52
+      pop_f[i] <- (pop_f[i] - death_f[i])*(51/52) + pop_f[i-1]/52
+    }
+    
+  }
+  
+  death_count_week 
+}
+
+```
+
+
+```{r}
+test <- predicted_death_week(population_m, population_f, death_m, death_f, modifier)
+(sum(test[1:156])-sum(death$deaths[1:156]))
+test
+```
+
+```{r}
+#Q2
+new_m <- info$mpop20
+new_f <- info$fpop20
+
+real_new_all <- death$deaths[157:305]
+new_all <- predicted_death_week(new_m, new_f, death_m, death_f, modifier[157:305])
+diff_all <- sum(new - real_new)
+
+real_new <- death$deaths[157:208]
+new <- predicted_death_week(new_m, new_f, death_m, death_f, modifier[157:208])
+diff <- sum(new - real_new)
+diff
+real_new
+```
+
+```{r}
+#Q3
+week <- c(1:52)
+plot(week, real_new, col = 'blue')
+lines(week, new, col = 'red')
+```
+
+```{r}
+#Q4
+
+
+```
+
