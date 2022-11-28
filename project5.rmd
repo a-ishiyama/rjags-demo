@@ -10,6 +10,7 @@ death_f <- info$mf
 modifier <- death$d
 ```
 
+
 ```{r}
 #Q1
 predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
@@ -19,15 +20,15 @@ predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
   pop_m <- population_m
   pop_f <- population_f
   death_count_week <- rep(0,length(mod)) 
-  
+    
   for (i in 1:length(mod)){
     d <- mod[i] # modifier in week i
     death_m <- d*0.9885*q_m*pop_m
     death_f <- d*0.9885*q_f*pop_f
     death_count_week[i] <- sum(death_m + death_f)
     
-    pop_m[1] <- pop_m[1] - death_m[1]
-    pop_f[1] <- pop_f[1] - death_f[1]
+    pop_m[1] <- (pop_m[1] - death_m[1])*(51/52)
+    pop_f[1] <- (pop_f[1] - death_f[1])*(51/52)
     
     for (i in 2:length(pop_m)){
       pop_m[i] <- (pop_m[i] - death_m[i])*(51/52) + pop_m[i-1]/52
@@ -36,16 +37,13 @@ predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
     
   }
   
-  death_count_week 
+  death_count_week
 }
 
+test <- predicted_death_week(population_m, population_f, death_m, death_f, modifier[1:156])
+sum(death$deaths[1:156]) - sum(test)
 ```
 
-
-```{r}
-test <- predicted_death_week(population_m, population_f, death_m, death_f, modifier)
-(sum(test[1:156])-sum(death$deaths[1:156]))
-```
 
 ```{r}
 #Q2
@@ -63,6 +61,7 @@ excess_death_2020 <- death_2020 - p_death_2020
 excess_2020_sum <- sum(excess_death_2020)
 ```
 
+
 ```{r}
 #Q3
 week <- c(1:52)
@@ -73,11 +72,13 @@ legend(x = 'topright', legend=c("observed", "predicted"),
        box.lty=0, bg = rgb(1, 0, 0, alpha = 0.15))
 ```
 
+
 ```{r}
 #Q4
 cum_excess <- cumsum(excess_death_2020)
 plot(week, cum_excess, type = "b", pch = 18, col = "red", xlab = "weeks", ylab = "excess death")
 ```
+
 
 ```{r}
 #Q5
@@ -96,12 +97,14 @@ sample_coda <- coda.samples(model_jags, jags_params, n.iter = 10000, jags.seed =
 print(sample)
 ```
 
+
 ```{r}
 #Q6
 sample_coda_list <- as.mcmc.list(sample_coda)
 rho_list <- sample_coda_list[, length(excess_death_from_2020)+2]
 plot(rho_list)
 ```
+
 
 ```{r}
 #Q7
@@ -115,9 +118,13 @@ mu_coda <- mu_coda[2:(length(excess_death_from_2020)+1)]
 mu_coda
 ```
 
+
 ```{r}
 #Q8
-index <- rep(1:10000)
+weeks <- rep(1:length(excess_death_from_2020))
+index <- seq(50,10000,50)
+p_vector <- (sample_coda_list[,2:(length(excess_death_from_2020)+1)])
+plot(weeks, )
 
 ```
 
