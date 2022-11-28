@@ -16,28 +16,45 @@ modifier <- death$d
 predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
   
   q_m <- 1 - exp(-dr_m/52)
+  # compute the expected weekly proportion of death in each age class
   q_f <- 1 - exp(-dr_f/52)
   pop_m <- population_m
+  # the weekly starting male population, keeps getting updated through for-loop
   pop_f <- population_f
-  death_count_week <- rep(0,length(mod)) 
+  death_count_week <- rep(0,length(mod))
+  # vector of 0s to insert the actual number of weekly death
     
   for (i in 1:length(mod)){
-    d <- mod[i] # modifier in week i
-    death_m <- d*0.9885*q_m*pop_m
-    death_f <- d*0.9885*q_f*pop_f
+    d <- mod[i] 
+    # seasonal modifier in week i
+    death_m <- 0.9885*d*q_m*pop_m
+    # vector of male population death in week i
+    death_f <- 0.9885*d*q_f*pop_f
     death_count_week[i] <- sum(death_m + death_f)
+    # death in week i is the sum of male and female death, computed by summing
+    # the vector 'death_m' and 'death_f'
+    pop_m_end <- pop_m - death_m
+    # vector of end of week i population of make after taking into account of
+    # the death that week
+    pop_f_end <- pop_f - death_f
     
-    pop_m[1] <- (pop_m[1] - death_m[1])*(51/52)
-    pop_f[1] <- (pop_f[1] - death_f[1])*(51/52)
-    
-    for (i in 2:length(pop_m)){
-      pop_m[i] <- (pop_m[i] - death_m[i])*(51/52) + pop_m[i-1]/52
-      pop_f[i] <- (pop_f[i] - death_f[i])*(51/52) + pop_f[i-1]/52
+    pop_m[1] <- pop_m_end[1]*(51/52) + population_m[1]/52
+    # update the weekly starting population of age class (0) by adding 51/52th 
+    # of the previous week ending population and a constant number of new birth, 
+    # assuming constant birth-rate represented by 'population_m[1]/52'
+    pop_f[1] <- pop_f_end[1]*(51/52) + population_f[1]/52
+  
+    for (j in 2:length(pop_m)){
+      pop_m[j] <- pop_m_end[j]*(51/52) + pop_m_end[j-1]/52
+      # update the weekly starting population of age class (j) by adding 51/52th 
+      # of the previous week ending population and 1/52th of age class (j-1)'s 
+      # previous week ending population
+      pop_f[j] <- pop_f_end[j]*(51/52) + pop_f_end[j-1]/52
     }
     
   }
   
-  death_count_week
+  death_count_week # return the vector of predicted weekly death count
 }
 
 test <- predicted_death_week(population_m, population_f, death_m, death_f, modifier[1:156])
@@ -51,14 +68,30 @@ population_m_20 <- info$mpop20
 population_f_20 <- info$fpop20
 
 death_from_2020 <- death$deaths[157:length(death$deaths)]
-p_death_from_2020 <- predicted_death_week(population_m_20, population_f_20, death_m, death_f, modifier[157:length(death$deaths)])
+# actual deaths from the start of 2020 to the end of the data
+p_death_from_2020 <- predicted_death_week(population_m_20, population_f_20, 
+                                          death_m, death_f, 
+                                          modifier[157:length(death$deaths)])
+# using the function 'predicted_death_week' to obtain the predicted weekly death
+# count from the start of 2020 to the end of the data
 excess_death_from_2020 <- death_from_2020 - p_death_from_2020
+# excess death defined by the difference between the observation and prediction
 excess_from_2020_sum <- sum(excess_death_from_2020)
+# the difference between the total actual deaths and the total predicted deaths 
+# from the start of 2020 to the end of the data
+print(excess_from_2020_sum)
 
 death_2020 <- death$deaths[157:208]
-p_death_2020 <- predicted_death_week(population_m_20, population_f_20, death_m, death_f, modifier[157:208])
+# actual deaths for 2020
+p_death_2020 <- predicted_death_week(population_m_20, population_f_20, 
+                                     death_m, death_f, modifier[157:208])
+# using the function 'predicted_death_week' to obtain the predicted weekly death
+# count for 2020
 excess_death_2020 <- death_2020 - p_death_2020
 excess_2020_sum <- sum(excess_death_2020)
+# the difference between the total actual deaths and the total predicted deaths 
+# for 2020
+print(excess_2020_sum)
 ```
 
 
@@ -82,18 +115,28 @@ plot(week, cum_excess, type = "b", pch = 18, col = "red", xlab = "weeks", ylab =
 
 ```{r}
 #Q5
-library('rjags')
-jags_params <- c("mu", "rho", "k")
 delete <- c(51, 52, 53, 105, 106)
 for (i in delete){
   excess_death_from_2020[i] <- NA
 }
+# replace excess death values with NA for weeks with recording problems
 
-jags_data <- list(x = excess_death_from_2020, N = length(excess_death_from_2020))
+library('rjags')
+
+jags_data <- list(x = excess_death_from_2020, 
+                  N = length(excess_death_from_2020))
+# data to be used in the jags model
+jags_params <- c("k", "mu","rho")
+# the parameters in the jags model to keep track of
 model_jags <- jags.model("model.jags", data = jags_data)
+# using the 'jags.model' function to compile the time-series model specified in
+# the 'model.jags' file
 sample <- jags.samples(model_jags, jags_params, n.iter = 10000, jags.seed = 1)
-
-sample_coda <- coda.samples(model_jags, jags_params, n.iter = 10000, jags.seed = 1)
+# draw 10000 samples to form the posterior 'k', 'mu', and 'rho' given the
+# observed excess death data
+sample_coda <- coda.samples(model_jags, jags_params, n.iter = 10000, 
+                            jags.seed = 1)
+# same as above but using 'coda' package variant
 print(sample)
 ```
 
