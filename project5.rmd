@@ -105,9 +105,14 @@ print(excess_2020_sum)
 ```{r}
 #Q3
 week <- c(1:length(excess_death_from_2020))
-plot(week[1:52], death_2020, col = 'blue', xlab = "weeks", ylab = "number of death", 
-     ylim = c(0,max(death_2020)), main = 'plot of number of death against week')
+# generate a week vector
+plot(week[1:52], death_2020, col = 'blue', xlab = "weeks", 
+     ylab = "number of death", ylim = c(0,max(death_2020)), 
+     main = 'plot of number of death against week')
+# plot the observed deaths against week
+# lower limit on the y axis scale set to 0
 lines(week[1:52], p_death_2020, col = 'red')
+# overlay a continuous curve of the predicted deaths
 legend(x = 'topright', legend=c("observed", "predicted"),
        col=c("blue", "red"), inset = 0.05, lty = 3:1 ,cex=1.2, border = "black",
        box.lty=0, bg = rgb(1, 0, 0, alpha = 0.15))
@@ -153,8 +158,8 @@ print(sample)
 
 ```{r}
 #Q6
-# sample_coda_list <- as.mcmc.list(sample_coda)
 rho_list <- sample_coda[, length(excess_death_from_2020)+2]
+
 traceplot(rho_list, main = 'traceplot of rho')
 hist(unlist(rho_list), main = 'occurence of specific rho values', xlab = "rho")
 ```
@@ -173,8 +178,6 @@ mu_coda
 
 ```{r}
 #Q8
-delete <- c(51, 52, 53, 105, 106)
-
 p_vector <- (sample_coda[,2:(length(excess_death_from_2020)+1)])
 
 plot(week, unlist(p_vector[50,]), type = "l", col = "grey", 
