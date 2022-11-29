@@ -124,7 +124,7 @@ legend(x = 'topright', legend=c("observed", "predicted"),
 cum_excess <- cumsum(excess_death_from_2020)
 # compute the cumulative excess deaths by week using using the 'cumsum' 
 # function
-barplot(cum_excess, pch = 18, ylab = "cumulative excess death", 
+barplot(cum_excess, ylab = "cumulative excess death", 
      main = 'plot of the cumulative excess deaths')
 ```
 
@@ -148,13 +148,11 @@ jags_params <- c("k", "mu","rho")
 model_jags <- jags.model("model.jags", data = jags_data)
 # using the 'jags.model' function to compile the time-series model specified in
 # the 'model.jags' file
-##sample <- jags.samples(model_jags, jags_params, n.iter = 10000, jags.seed = 1)
-# draw 10000 samples to form the posterior 'k', 'mu', and 'rho' given the
-# observed excess death data
-sample_coda <- coda.samples(model_jags, jags_params, n.iter = 10000, 
-                            jags.seed = 1)
-# same as above but using 'coda' package variant
-summary(sample_coda)
+##sample <- jags.samples(model_jags, jags_params, n.iter = 10000)
+# draw 10000 samples to form the posterior 'k', 'mu', and 'rho'
+sample_coda <- coda.samples(model_jags, jags_params, n.iter = 10000)
+# draw 10000 samples to form the posterior 'k', 'mu', and 'rho'
+# summary(sample_coda)
 ```
 
 
