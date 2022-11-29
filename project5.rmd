@@ -105,7 +105,8 @@ print(excess_2020_sum)
 ```{r}
 #Q3
 week <- c(1:52)
-plot(week, death_2020, col = 'blue', xlab = "weeks", ylab = "number of death")
+plot(week, death_2020, col = 'blue', xlab = "weeks", ylab = "number of death", 
+     ylim = c(0,max(death_2020)))
 lines(week, p_death_2020, col = 'red')
 legend(x = 'topright', legend=c("observed", "predicted"),
        col=c("blue", "red"), inset = 0.05, lty = 3:1 ,cex=1.2, border = "black",
@@ -115,8 +116,9 @@ legend(x = 'topright', legend=c("observed", "predicted"),
 
 ```{r}
 #Q4
-cum_excess <- cumsum(excess_death_2020)
-plot(week, cum_excess, type = "b", pch = 18, col = "red", xlab = "weeks", ylab = "excess death")
+week2 <- c(1:length(excess_death_from_2020))
+cum_excess <- cumsum(excess_death_from_2020)
+plot(week2, cum_excess, type = "b", pch = 18, col = "red", xlab = "weeks", ylab = "excess death")
 ```
 
 
@@ -150,19 +152,18 @@ print(sample)
 
 ```{r}
 #Q6
-sample_coda_list <- as.mcmc.list(sample_coda)
-rho_list <- sample_coda_list[, length(excess_death_from_2020)+2]
-plot(rho_list)
+# sample_coda_list <- as.mcmc.list(sample_coda)
+rho_list <- sample_coda[, length(excess_death_from_2020)+2]
+traceplot(rho_list)
+hist(unlist(rho_list), main = 'rho', xlab = "rho")
 ```
 
 
 ```{r}
 #Q7
-mu <- sample$mu
-
 mu_coda <- rep(0,length(excess_death_from_2020)+2)
 for (i in 1:(length(excess_death_from_2020)+2)){
-  mu_coda[i]<-sum(unlist(sample_coda_list[,i]))/10000
+  mu_coda[i]<-sum(unlist(sample_coda[,i]))/10000
 }
 mu_coda <- mu_coda[2:(length(excess_death_from_2020)+1)]
 mu_coda
@@ -172,10 +173,27 @@ mu_coda
 ```{r}
 #Q8
 weeks <- rep(1:length(excess_death_from_2020))
-index <- seq(50,10000,50)
-p_vector <- (sample_coda_list[,2:(length(excess_death_from_2020)+1)])
-plot(weeks, )
+delete <- c(51, 52, 53, 105, 106)
 
+#for (i in delete){
+  #excess_death_from_2020[i] <- NA
+#}
+
+p_vector <- (sample_coda[,2:(length(excess_death_from_2020)+1)])
+
+plot(weeks, unlist(p_vector[50,]), type = "l", col = "grey", 
+     xlab = "Week", ylab = "Excess deaths", main = "Plot")
+
+index <- seq(100,10000,50)
+for(i in index){
+  lines(weeks, unlist(p_vector[i,]), type="l", col = "grey")
+}
+
+lines(weeks, mu_coda, type="l", col = "blue")
+
+points(weeks, excess_death_from_2020, pch = 20)
+
+points(weeks[delete], (death_from_2020 - p_death_from_2020)[delete], pch = 20, col ="red" )
 ```
 
 
@@ -185,4 +203,3 @@ residual_d <- excess_death_from_2020 - mu_coda
 time <- (1:length(excess_death_from_2020))
 plot(time, residual_d)
 ```
-
