@@ -23,6 +23,7 @@ predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
   pop_f <- population_f
   death_count_week <- rep(0,length(mod))
   # vector of 0s to insert the actual number of weekly death
+  len <- length(pop_m)
     
   for (i in 1:length(mod)){
     d <- mod[i] 
@@ -44,20 +45,26 @@ predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
     # assuming constant birth-rate represented by 'population_m[1]/52'
     pop_f[1] <- pop_f_end[1]*(51/52) + population_f[1]/52
   
-    for (j in 2:length(pop_m)){
-      pop_m[j] <- pop_m_end[j]*(51/52) + pop_m_end[j-1]/52
+    pop_m[2:len] <- pop_m_end[2:len]*(51/52) + pop_m_end[1:(len-1)]/52
+    # update the weekly starting population of age class (j>1) by adding 51/52th 
+    # of the previous week ending population and 1/52th of age class (j-1)'s 
+    # previous week ending population
+    pop_f[2:len] <- pop_f_end[2:len]*(51/52) + pop_f_end[1:(len-1)]/52
+    
+    #for (j in 2:length(pop_m)){
+      #pop_m[j] <- pop_m_end[j]*(51/52) + pop_m_end[j-1]/52
       # update the weekly starting population of age class (j) by adding 51/52th 
       # of the previous week ending population and 1/52th of age class (j-1)'s 
       # previous week ending population
-      pop_f[j] <- pop_f_end[j]*(51/52) + pop_f_end[j-1]/52
-    }
+      #pop_f[j] <- pop_f_end[j]*(51/52) + pop_f_end[j-1]/52
+    #}
     
   }
-  
   death_count_week # return the vector of predicted weekly death count
 }
 
-test <- predicted_death_week(population_m, population_f, death_m, death_f, modifier[1:156])
+test <- predicted_death_week(population_m, population_f, death_m, death_f, 
+                             modifier[1:156])
 sum(death$deaths[1:156]) - sum(test)
 ```
 
