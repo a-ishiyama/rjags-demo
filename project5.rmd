@@ -122,6 +122,8 @@ legend(x = 'topright', legend=c("observed", "predicted"),
 ```{r}
 #Q4
 cum_excess <- cumsum(excess_death_from_2020)
+# compute the cumulative excess deaths by week using using the 'cumsum' 
+# function
 barplot(cum_excess, pch = 18, ylab = "cumulative excess death", 
      main = 'plot of the cumulative excess deaths')
 ```
@@ -146,20 +148,20 @@ jags_params <- c("k", "mu","rho")
 model_jags <- jags.model("model.jags", data = jags_data)
 # using the 'jags.model' function to compile the time-series model specified in
 # the 'model.jags' file
-sample <- jags.samples(model_jags, jags_params, n.iter = 10000, jags.seed = 1)
+##sample <- jags.samples(model_jags, jags_params, n.iter = 10000, jags.seed = 1)
 # draw 10000 samples to form the posterior 'k', 'mu', and 'rho' given the
 # observed excess death data
 sample_coda <- coda.samples(model_jags, jags_params, n.iter = 10000, 
                             jags.seed = 1)
 # same as above but using 'coda' package variant
-print(sample)
+summary(sample_coda)
 ```
 
 
 ```{r}
 #Q6
 rho_list <- sample_coda[, length(excess_death_from_2020)+2]
-
+# extract the rho values from the sample list
 traceplot(rho_list, main = 'traceplot of rho')
 hist(unlist(rho_list), main = 'occurence of specific rho values', xlab = "rho")
 ```
@@ -171,7 +173,11 @@ mu_coda <- rep(0,length(excess_death_from_2020)+2)
 for (i in 1:(length(excess_death_from_2020)+2)){
   mu_coda[i]<-sum(unlist(sample_coda[,i]))/10000
 }
+# compute the average of every parameter from the jags model sampling based on 
+# the 10000 iteration
+
 mu_coda <- mu_coda[2:(length(excess_death_from_2020)+1)]
+# limit the scope to 'mu'
 mu_coda
 ```
 
@@ -179,27 +185,36 @@ mu_coda
 ```{r}
 #Q8
 p_vector <- (sample_coda[,2:(length(excess_death_from_2020)+1)])
+# extract the 'mu' vector from the jags model sampling
 
 plot(week, unlist(p_vector[50,]), type = "l", col = "grey", 
      xlab = "Week", ylab = "excess deaths", 
      main = "plot of excess death against week")
+# plot the first curve using the 'mu' value obtained from the 50th iteration
 
 index <- seq(100,10000,50)
 for(i in index){
   lines(week, unlist(p_vector[i,]), type="l", col = "grey")
 }
+# overlay the remaining 199 curves using the 'mu' value obtained from 
+# 100th-10000th iterations
 
 lines(week, mu_coda, type="l", col = "blue")
+# overlay the estimated expectation of 'mu' in blue
 
 points(week, excess_death_from_2020, pch = 20)
+# plot the observed excess deaths
 
 points(week[delete], excess_death_from_2020[delete], pch = 20, col ="red" )
+# plot the observed excess deaths for weeks with recording problems
 ```
 
 
 ```{r}
 #Q9
 residual_d <- excess_death_from_2020 - mu_coda
+# residual is defined by the difference between the actual observation and the 
+# expectation of the excess death
 plot(week, residual_d, xlab = 'week', ylab = 'residual', 
      main = 'plot of residual against week')
 ```
