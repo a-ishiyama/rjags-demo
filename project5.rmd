@@ -104,10 +104,10 @@ print(excess_2020_sum)
 
 ```{r}
 #Q3
-week <- c(1:52)
-plot(week, death_2020, col = 'blue', xlab = "weeks", ylab = "number of death", 
-     ylim = c(0,max(death_2020)))
-lines(week, p_death_2020, col = 'red')
+week <- c(1:length(excess_death_from_2020))
+plot(week[1:52], death_2020, col = 'blue', xlab = "weeks", ylab = "number of death", 
+     ylim = c(0,max(death_2020)), main = 'plot of number of death against week')
+lines(week[1:52], p_death_2020, col = 'red')
 legend(x = 'topright', legend=c("observed", "predicted"),
        col=c("blue", "red"), inset = 0.05, lty = 3:1 ,cex=1.2, border = "black",
        box.lty=0, bg = rgb(1, 0, 0, alpha = 0.15))
@@ -116,23 +116,24 @@ legend(x = 'topright', legend=c("observed", "predicted"),
 
 ```{r}
 #Q4
-week2 <- c(1:length(excess_death_from_2020))
 cum_excess <- cumsum(excess_death_from_2020)
-plot(week2, cum_excess, type = "b", pch = 18, col = "red", xlab = "weeks", ylab = "excess death")
+barplot(cum_excess, pch = 18, ylab = "cumulative excess death", 
+     main = 'plot of the cumulative excess deaths')
 ```
 
 
 ```{r}
 #Q5
 delete <- c(51, 52, 53, 105, 106)
+excess_death_from_2020_n <- excess_death_from_2020
 for (i in delete){
-  excess_death_from_2020[i] <- NA
+  excess_death_from_2020_n[i] <- NA
 }
 # replace excess death values with NA for weeks with recording problems
 
 library('rjags')
 
-jags_data <- list(x = excess_death_from_2020, 
+jags_data <- list(x = excess_death_from_2020_n, 
                   N = length(excess_death_from_2020))
 # data to be used in the jags model
 jags_params <- c("k", "mu","rho")
@@ -154,8 +155,8 @@ print(sample)
 #Q6
 # sample_coda_list <- as.mcmc.list(sample_coda)
 rho_list <- sample_coda[, length(excess_death_from_2020)+2]
-traceplot(rho_list)
-hist(unlist(rho_list), main = 'rho', xlab = "rho")
+traceplot(rho_list, main = 'traceplot of rho')
+hist(unlist(rho_list), main = 'occurence of specific rho values', xlab = "rho")
 ```
 
 
@@ -172,34 +173,30 @@ mu_coda
 
 ```{r}
 #Q8
-weeks <- rep(1:length(excess_death_from_2020))
 delete <- c(51, 52, 53, 105, 106)
-
-#for (i in delete){
-  #excess_death_from_2020[i] <- NA
-#}
 
 p_vector <- (sample_coda[,2:(length(excess_death_from_2020)+1)])
 
-plot(weeks, unlist(p_vector[50,]), type = "l", col = "grey", 
-     xlab = "Week", ylab = "Excess deaths", main = "Plot")
+plot(week, unlist(p_vector[50,]), type = "l", col = "grey", 
+     xlab = "Week", ylab = "excess deaths", 
+     main = "plot of excess death against week")
 
 index <- seq(100,10000,50)
 for(i in index){
-  lines(weeks, unlist(p_vector[i,]), type="l", col = "grey")
+  lines(week, unlist(p_vector[i,]), type="l", col = "grey")
 }
 
-lines(weeks, mu_coda, type="l", col = "blue")
+lines(week, mu_coda, type="l", col = "blue")
 
-points(weeks, excess_death_from_2020, pch = 20)
+points(week, excess_death_from_2020, pch = 20)
 
-points(weeks[delete], (death_from_2020 - p_death_from_2020)[delete], pch = 20, col ="red" )
+points(week[delete], excess_death_from_2020[delete], pch = 20, col ="red" )
 ```
 
 
 ```{r}
 #Q9
 residual_d <- excess_death_from_2020 - mu_coda
-time <- (1:length(excess_death_from_2020))
-plot(time, residual_d)
+plot(week, residual_d, xlab = 'week', ylab = 'residual', 
+     main = 'plot of residual against week')
 ```
