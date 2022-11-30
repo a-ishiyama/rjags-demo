@@ -12,7 +12,8 @@ model{
   
   # the model is based on lagged model with the lag of t-1
   for(i in 2:N) {
-    mu[i] <- (x[i-1]-alpha)*rho+alpha # mu changes with time t[-1]
+    mu[i] <- (x[i-1]-alpha)*rho+alpha 
+    # mu changes with lagged value of x, x[i-1]
     x[i] ~ dt(mu[i], tau, k) # scaled t for x[i]
   }
   
