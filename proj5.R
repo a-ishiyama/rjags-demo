@@ -73,14 +73,14 @@ predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
     
     pop_m[1] <- pop_m_end[1]*(51/52) + population_m[1]/52
     # update the weekly starting population of age class (0) by adding 51/52th 
-    # of the previous week ending population and a constant number of new birth, 
-    # assuming constant birth-rate represented by 'population_m[1]/52'
+    # of the previous week ending population and a constant number of new 
+    # birth, assuming constant birth-rate represented by 'population_m[1]/52'
     pop_f[1] <- pop_f_end[1]*(51/52) + population_f[1]/52
     
     pop_m[2:len] <- pop_m_end[2:len]*(51/52) + pop_m_end[1:(len-1)]/52
-    # update the weekly starting population of age class (j>1) by adding 51/52th 
-    # of the previous week ending population and 1/52th of age class (j-1)'s 
-    # previous week ending population
+    # update the weekly starting population of age class (j>1) by adding 
+    # 51/52th of the previous week ending population and 1/52th of age class 
+    # (j-1)'s previous week ending population
     pop_f[2:len] <- pop_f_end[2:len]*(51/52) + pop_f_end[1:(len-1)]/52
   }
   death_count_week # return the vector of predicted weekly death count
@@ -101,8 +101,8 @@ death_from_2020 <- death$deaths[157:length(death$deaths)]
 p_death_from_2020 <- predicted_death_week(population_m_20, population_f_20, 
                                           death_m, death_f, 
                                           modifier[157:length(death$deaths)])
-# using the function 'predicted_death_week' to obtain the predicted weekly death
-# count from the start of 2020 to the end of the data
+# using the function 'predicted_death_week' to obtain the predicted weekly 
+# death count from the start of 2020 to the end of the data
 excess_death_from_2020 <- death_from_2020 - p_death_from_2020
 # excess death defined by the difference between the observation and prediction
 excess_from_2020_sum <- sum(excess_death_from_2020)
@@ -114,8 +114,8 @@ death_2020 <- death$deaths[157:208]
 # actual deaths for 2020
 p_death_2020 <- predicted_death_week(population_m_20, population_f_20, 
                                      death_m, death_f, modifier[157:208])
-# using the function 'predicted_death_week' to obtain the predicted weekly death
-# count for 2020
+# using the function 'predicted_death_week' to obtain the predicted weekly 
+# death count for 2020
 excess_death_2020 <- death_2020 - p_death_2020
 excess_2020_sum <- sum(excess_death_2020)
 # the difference between the total actual deaths and the total predicted deaths 
@@ -123,20 +123,20 @@ excess_2020_sum <- sum(excess_death_2020)
 print(excess_2020_sum)
 
 
-#-- plot of observed and predicted death in 2020 ------------------------------
+#-- plot of observed and predicted death from 2020 ----------------------------
 #   In this section, the observed death per week is plotted against the 
 # prediction, former in scatter plot and latter in a continuous curve.
 
 week <- c(1:length(excess_death_from_2020))
 # generate a week vector
 
-plot(week[1:52], death_2020, col = 'blue', xlab = "weeks", 
+plot(week, death_from_2020, col = 'blue', xlab = "weeks", 
      ylab = "number of death", ylim = c(0,max(death_2020)), 
      main = 'excess death in 2020: 58611.92, total from 2020: 91367.86')
 # plot the observed deaths against week
 # lower limit on the y axis scale set to 0
 
-lines(week[1:52], p_death_2020, col = 'red')
+lines(week, p_death_from_2020, col = 'red')
 # overlay a continuous curve of the predicted deaths
 
 legend(x = 'topright', legend=c("observed", "predicted"),
