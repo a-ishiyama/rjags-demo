@@ -1,16 +1,19 @@
 model{
 
-  tau ~ dexp(1)
-  rho ~ dunif(0, 0.9)
-  alpha ~ dnorm(0, 0.0001)
-  k ~ dunif(2, 100)
+  # priors
+  tau ~ dexp(1) # precision prior
+  rho ~ dunif(0, 0.9) # rho(coefficient of the time-series model) prior
+  alpha ~ dnorm(0, 0.0001) # alpha prior
+  k ~ dunif(2, 100) # degree of freedom prior
   
+  # time-series modelling
   mu[1] <- alpha
   x[1] ~ dt(alpha, tau, k)
   
+  # the model is based on lagged model with the lag of t-1
   for(i in 2:N) {
-    mu[i] <- (x[i-1]-alpha)*rho+alpha
-    x[i] ~ dt(mu[i], tau, k)
+    mu[i] <- (x[i-1]-alpha)*rho+alpha # mu changes with time t[-1]
+    x[i] ~ dt(mu[i], tau, k) # scaled t for x[i]
   }
   
 }

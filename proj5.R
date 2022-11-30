@@ -1,0 +1,203 @@
+#read data
+info <- read.table('lt1720uk.dat', header=TRUE)
+death <- read.table('death1722uk.dat', header=TRUE)
+
+population_m <- info$mpop17
+population_f <- info$fpop17
+death_m <- info$mm
+death_f <- info$mf
+modifier <- death$d
+
+
+
+
+#Q1
+predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
+  
+  q_m <- 1 - exp(-dr_m/52)
+  # compute the expected weekly proportion of death in each age class
+  q_f <- 1 - exp(-dr_f/52)
+  pop_m <- population_m
+  # the weekly starting male population, keeps getting updated through for-loop
+  pop_f <- population_f
+  death_count_week <- rep(0,length(mod))
+  # vector of 0s to insert the actual number of weekly death
+  len <- length(pop_m)
+  
+  for (i in 1:length(mod)){
+    d <- mod[i] 
+    # seasonal modifier in week i
+    death_m <- 0.9885*d*q_m*pop_m
+    # vector of male population death in week i
+    death_f <- 0.9885*d*q_f*pop_f
+    death_count_week[i] <- sum(death_m + death_f)
+    # death in week i is the sum of male and female death, computed by summing
+    # the vector 'death_m' and 'death_f'
+    pop_m_end <- pop_m - death_m
+    # vector of end of week i population of make after taking into account of
+    # the death that week
+    pop_f_end <- pop_f - death_f
+    
+    pop_m[1] <- pop_m_end[1]*(51/52) + population_m[1]/52
+    # update the weekly starting population of age class (0) by adding 51/52th 
+    # of the previous week ending population and a constant number of new birth, 
+    # assuming constant birth-rate represented by 'population_m[1]/52'
+    pop_f[1] <- pop_f_end[1]*(51/52) + population_f[1]/52
+    
+    pop_m[2:len] <- pop_m_end[2:len]*(51/52) + pop_m_end[1:(len-1)]/52
+    # update the weekly starting population of age class (j>1) by adding 51/52th 
+    # of the previous week ending population and 1/52th of age class (j-1)'s 
+    # previous week ending population
+    pop_f[2:len] <- pop_f_end[2:len]*(51/52) + pop_f_end[1:(len-1)]/52
+  }
+  death_count_week # return the vector of predicted weekly death count
+}
+
+test <- predicted_death_week(population_m, population_f, death_m, death_f, 
+                             modifier[1:156])
+sum(death$deaths[1:156]) - sum(test)
+
+
+
+
+#Q2
+population_m_20 <- info$mpop20
+population_f_20 <- info$fpop20
+
+death_from_2020 <- death$deaths[157:length(death$deaths)]
+# actual deaths from the start of 2020 to the end of the data
+p_death_from_2020 <- predicted_death_week(population_m_20, population_f_20, 
+                                          death_m, death_f, 
+                                          modifier[157:length(death$deaths)])
+# using the function 'predicted_death_week' to obtain the predicted weekly death
+# count from the start of 2020 to the end of the data
+excess_death_from_2020 <- death_from_2020 - p_death_from_2020
+# excess death defined by the difference between the observation and prediction
+excess_from_2020_sum <- sum(excess_death_from_2020)
+# the difference between the total actual deaths and the total predicted deaths 
+# from the start of 2020 to the end of the data
+print(excess_from_2020_sum)
+
+death_2020 <- death$deaths[157:208]
+# actual deaths for 2020
+p_death_2020 <- predicted_death_week(population_m_20, population_f_20, 
+                                     death_m, death_f, modifier[157:208])
+# using the function 'predicted_death_week' to obtain the predicted weekly death
+# count for 2020
+excess_death_2020 <- death_2020 - p_death_2020
+excess_2020_sum <- sum(excess_death_2020)
+# the difference between the total actual deaths and the total predicted deaths 
+# for 2020
+print(excess_2020_sum)
+
+
+
+
+#Q3
+week <- c(1:length(excess_death_from_2020))
+# generate a week vector
+plot(week[1:52], death_2020, col = 'blue', xlab = "weeks", 
+     ylab = "number of death", ylim = c(0,max(death_2020)), 
+     main = 'plot of number of death against week')
+# plot the observed deaths against week
+# lower limit on the y axis scale set to 0
+lines(week[1:52], p_death_2020, col = 'red')
+# overlay a continuous curve of the predicted deaths
+legend(x = 'topright', legend=c("observed", "predicted"),
+       col=c("blue", "red"), inset = 0.05, lty = 3:1 ,cex=1.2, border = "black",
+       box.lty=0, bg = rgb(1, 0, 0, alpha = 0.15))
+
+
+
+
+#Q4
+cum_excess <- cumsum(excess_death_from_2020)
+# compute the cumulative excess deaths by week using using the 'cumsum' 
+# function
+barplot(cum_excess, ylab = "cumulative excess death", 
+        main = 'plot of the cumulative excess deaths')
+
+
+
+
+#Q5
+delete <- c(51, 52, 53, 105, 106)
+excess_death_from_2020_n <- excess_death_from_2020
+for (i in delete){
+  excess_death_from_2020_n[i] <- NA
+}
+# replace excess death values with NA for weeks with recording problems
+
+library('rjags')
+
+jags_data <- list(x = excess_death_from_2020_n, 
+                  N = length(excess_death_from_2020))
+# data to be used in the jags model
+jags_params <- c("k", "mu","rho")
+# the parameters in the jags model to keep track of
+model_jags <- jags.model("model.jags", data = jags_data)
+# using the 'jags.model' function to compile the time-series model specified in
+# the 'model.jags' file
+sample_coda <- coda.samples(model_jags, jags_params, n.iter = 10000)
+# draw 10000 samples to form the posterior 'k', 'mu', and 'rho'
+
+
+
+#Q6
+rho_list <- sample_coda[, length(excess_death_from_2020)+2]
+# extract the rho values from the sample list
+traceplot(rho_list, main = 'traceplot of rho')
+hist(unlist(rho_list), main = 'occurence of specific rho values', xlab = "rho")
+
+
+
+
+#Q7
+mu_coda <- rep(0,length(excess_death_from_2020)+2)
+for (i in 1:(length(excess_death_from_2020)+2)){
+  mu_coda[i]<-sum(unlist(sample_coda[,i]))/10000
+}
+# compute the average of every parameter from the jags model sampling based on 
+# the 10000 iteration
+
+mu_coda <- mu_coda[2:(length(excess_death_from_2020)+1)]
+# limit the scope to 'mu'
+mu_coda
+
+
+
+
+#Q8
+p_vector <- (sample_coda[,2:(length(excess_death_from_2020)+1)])
+# extract the 'mu' vector from the jags model sampling
+
+plot(week, unlist(p_vector[50,]), type = "l", col = "grey", 
+     xlab = "Week", ylab = "excess deaths", 
+     main = "plot of excess death against week")
+# plot the first curve using the 'mu' value obtained from the 50th iteration
+
+index <- seq(100,10000,50)
+for(i in index){
+  lines(week, unlist(p_vector[i,]), type="l", col = "grey")
+}
+# overlay the remaining 199 curves using the 'mu' value obtained from 
+# 100th-10000th iterations
+
+lines(week, mu_coda, type="l", col = "blue")
+# overlay the estimated expectation of 'mu' in blue
+
+points(week, excess_death_from_2020, pch = 20)
+# plot the observed excess deaths
+
+points(week[delete], excess_death_from_2020[delete], pch = 20, col ="red" )
+# plot the observed excess deaths for weeks with recording problems
+
+
+
+
+#Q9
+residual_d <- excess_death_from_2020 - mu_coda
+# residual is defined by the difference between the actual observation and the 
+# expectation of the excess death
+plot(week, residual_d, xlab = 'week', ylab = 'residual', 
+     main = 'plot of residual against week')
