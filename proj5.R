@@ -1,17 +1,35 @@
-#read data
+# Name: Akira Ishiyama
+# ID: s2445245
+
+#-- Overview ------------------------------------------------------------------
+#
+
+
+#-- data preparation ----------------------------------------------------------
+
+# read the data as 'info' and 'death'
 info <- read.table('lt1720uk.dat', header=TRUE)
 death <- read.table('death1722uk.dat', header=TRUE)
 
+# the male and female populations in each age class at the start of 2017
 population_m <- info$mpop17
 population_f <- info$fpop17
+
+# the male and female populations in each age class at the start of 2020
+population_m_20 <- info$mpop20
+population_f_20 <- info$fpop20
+
+# male and female annual death rates for each age class
 death_m <- info$mm
 death_f <- info$mf
+
+# death rate seasonality modifier
 modifier <- death$d
 
 
+#-- weekly death prediction ---------------------------------------------------
+#
 
-
-#Q1
 predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
   
   q_m <- 1 - exp(-dr_m/52)
@@ -53,16 +71,9 @@ predicted_death_week <- function(population_m, population_f, dr_m, dr_f, mod){
   death_count_week # return the vector of predicted weekly death count
 }
 
-test <- predicted_death_week(population_m, population_f, death_m, death_f, 
-                             modifier[1:156])
-sum(death$deaths[1:156]) - sum(test)
 
-
-
-
-#Q2
-population_m_20 <- info$mpop20
-population_f_20 <- info$fpop20
+#-- differences of observed and predicted death from and in 2020 --------------
+#
 
 death_from_2020 <- death$deaths[157:length(death$deaths)]
 # actual deaths from the start of 2020 to the end of the data
@@ -91,9 +102,9 @@ excess_2020_sum <- sum(excess_death_2020)
 print(excess_2020_sum)
 
 
+#-- plot of observed and predicted death in 2020 ------------------------------
+#
 
-
-#Q3
 week <- c(1:length(excess_death_from_2020))
 # generate a week vector
 plot(week[1:52], death_2020, col = 'blue', xlab = "weeks", 
@@ -108,9 +119,9 @@ legend(x = 'topright', legend=c("observed", "predicted"),
        box.lty=0, bg = rgb(1, 0, 0, alpha = 0.15))
 
 
+#-- plot of cumulative excess death from 2020 ---------------------------------
+#
 
-
-#Q4
 cum_excess <- cumsum(excess_death_from_2020)
 # compute the cumulative excess deaths by week using using the 'cumsum' 
 # function
@@ -118,14 +129,12 @@ barplot(cum_excess, ylab = "cumulative excess death",
         main = 'plot of the cumulative excess deaths')
 
 
+#-- time series modelling of excess death with jags ---------------------------
+#
 
-
-#Q5
 delete <- c(51, 52, 53, 105, 106)
 excess_death_from_2020_n <- excess_death_from_2020
-for (i in delete){
-  excess_death_from_2020_n[i] <- NA
-}
+excess_death_from_2020_n[delete] <- NA
 # replace excess death values with NA for weeks with recording problems
 
 library('rjags')
@@ -142,17 +151,18 @@ sample_coda <- coda.samples(model_jags, jags_params, n.iter = 10000)
 # draw 10000 samples to form the posterior 'k', 'mu', and 'rho'
 
 
+#-- trace plots and histograms of 'rho' ---------------------------------------
+#
 
-#Q6
 rho_list <- sample_coda[, length(excess_death_from_2020)+2]
 # extract the rho values from the sample list
 traceplot(rho_list, main = 'traceplot of rho')
 hist(unlist(rho_list), main = 'occurence of specific rho values', xlab = "rho")
 
 
+#-- computation of posterior expectation for mu -------------------------------
+#
 
-
-#Q7
 mu_coda <- rep(0,length(excess_death_from_2020)+2)
 for (i in 1:(length(excess_death_from_2020)+2)){
   mu_coda[i]<-sum(unlist(sample_coda[,i]))/10000
@@ -162,12 +172,11 @@ for (i in 1:(length(excess_death_from_2020)+2)){
 
 mu_coda <- mu_coda[2:(length(excess_death_from_2020)+1)]
 # limit the scope to 'mu'
-mu_coda
 
 
+#-- plot of observed and estimated excess death using jags --------------------
+#
 
-
-#Q8
 p_vector <- (sample_coda[,2:(length(excess_death_from_2020)+1)])
 # extract the 'mu' vector from the jags model sampling
 
@@ -193,9 +202,9 @@ points(week[delete], excess_death_from_2020[delete], pch = 20, col ="red" )
 # plot the observed excess deaths for weeks with recording problems
 
 
+#-- residual computation ------------------------------------------------------
+#
 
-
-#Q9
 residual_d <- excess_death_from_2020 - mu_coda
 # residual is defined by the difference between the actual observation and the 
 # expectation of the excess death
