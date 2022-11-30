@@ -158,7 +158,7 @@ lines(week, p_death_from_2020, col = 'red')
 # overlay a continuous curve of the predicted deaths
 
 legend(x = 'topright', legend=c("observed", "predicted"),
-       col=c("blue", "red"), pch = c(1,NA), lty = c(NA,1) ,cex=1.2, 
+       col=c("blue", "red"), pch = c(1,NA), lty = c(NA,1), 
        border = "black")
 
 
@@ -265,7 +265,7 @@ points(week[delete], excess_death_from_2020[delete], pch = 20, col ="red" )
 
 legend(x = 'topright', legend=c("sample", "expectation", "observed", "NAs"),
        col=c("grey", "blue", "black", "red"), pch = c(NA, NA, 20, 20), 
-       lty = c(1, 1, NA, NA) ,cex=1.2, border = "black")
+       lty = c(1, 1, NA, NA) ,cex=0.8, border = "black")
 
 
 #-- residual computation ------------------------------------------------------
@@ -281,6 +281,6 @@ plot(week, residual_d, xlab = 'week', ylab = 'residual',
      main = 'plot of residual against week')
 # plot the residual against week
 
-legend(x = 'topright', legend=c("residual"), pch = c(1,NA) ,cex=1.2, 
+legend(x = 'topright', legend=c("residual"), pch = c(1,NA), 
        border = "black")
 
