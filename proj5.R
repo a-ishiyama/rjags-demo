@@ -244,7 +244,8 @@ p_vector <- (sample_coda[,2:(length(excess_death_from_2020)+1)])
 
 plot(week, unlist(p_vector[50,]), type = "l", col = "grey", 
      xlab = "Week", ylab = "excess deaths", 
-     main = "plot of excess death against week")
+     main = "plot of excess death against week",
+     ylim = c(min(unlist(p_vector)), max(unlist(p_vector))))
 # plot the first curve using the 'mu' value obtained from the 50th iteration
 
 index <- seq(100,10000,50)
