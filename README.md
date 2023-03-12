@@ -1,7 +1,7 @@
 # UK excess deaths 2020-22 modelling with RJAGS
 Author: Akira Ishiyama
 
-This is a repo for the individual project of the module 'Statistical Programming'.
+This is a repo for the second individual project of the module 'Statistical Programming'.
 
  Code to examine the number of excess deaths in the UK for the year 2020-22.
  
